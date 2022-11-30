@@ -2,8 +2,7 @@ const express = require("express");
 const app = express();
 const cors = require("cors");
 const oracledb = require("oracledb");
-const { fetchAsBuffer } = require("oracledb");
-// oracledb.outFormat = oracledb.OUT_FORMAT_OBJECT;
+oracledb.outFormat = oracledb.OUT_FORMAT_OBJECT;
 const PORT = 5000;
 
 app.use(cors());
@@ -13,7 +12,8 @@ app.get("/", (req, res) => {
 });
 
 app.get("/employees", (req, res) => {
-  const fetch = async () => {
+  (async () => {
+    let connection;
     try {
       const connection = await oracledb.getConnection({
         user: "hr",
@@ -24,23 +24,50 @@ app.get("/employees", (req, res) => {
       const result = await connection.execute(
         `SELECT employee_id, first_name, last_name FROM employees`
       );
-      console.log(result);
+      // console.log(result);
       return res.send(result);
     } catch (error) {
       return error;
+    } finally {
+      if (connection) {
+        try {
+          await connection.close();
+        } catch (err) {
+          console.error(err);
+        }
+      }
     }
-  };
+  })();
+});
 
-  fetch();
+app.get("/EMPLEADO", (req, res) => {
+  (async () => {
+    let connection;
 
-  //   fetch()
-  //     .then((result) => {
-  //         console.log(result);
-  //       res.send(result);
-  //     })
-  //     .catch((err) => {
-  //       res.send(err);
-  //     });
+    try {
+      const connection = await oracledb.getConnection({
+        user: "userSK",
+        password: "PassUser",
+        connectString: "localhost/XEPDB1",
+      });
+
+      const result = await connection.execute(
+        `SELECT CLAVE, NOMBRE, APELLIDO_PAT, APELLIDO_MAT, CORREO, CARGO_EPL_ID, SUCURSAL_CLAVE, DIRECCION_ID FROM EMPLEADO`
+      );
+      // console.log(result);
+      return res.send(result);
+    } catch (error) {
+      return error;
+    } finally {
+      if (connection) {
+        try {
+          await connection.close();
+        } catch (err) {
+          console.error(err);
+        }
+      }
+    }
+  })();
 });
 
 app.listen(PORT, () => {

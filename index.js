@@ -18,11 +18,6 @@ const run = async () => {
 
     console.log(consulta);
 
-    // consulta.rows.forEach((e) => {
-    //   console.log(
-    //     `Su id es:${e.EMPLOYEE_ID}\nSu name es: ${e.FIRST_NAME} ${e.LAST_NAME}`
-    //   );
-    // });
   } catch (err) {
     console.error(err);
   } finally {
