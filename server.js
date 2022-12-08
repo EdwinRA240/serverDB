@@ -17,11 +17,36 @@ app.listen(PORT, () => {
   console.log(`listening on port ${PORT}`);
 });
 
-//ROUTES
-app.get("/", (req, res) => {
-  res.send("HELLO, WELCOME... SERVER ONLINE!!!");
-});
+const execute = async (query) => {
+  let connection;
 
+  try {
+    const connection = await oracledb.getConnection({
+      user: "userSK",
+      password: "PassUser",
+      connectString: "localhost/XEPDB1",
+    });
+
+    const result = await connection.execute(`${query}`);
+    console.log(result);
+    return res.send(result);
+  } catch (error) {
+    return error;
+  } finally {
+    if (connection) {
+      try {
+        await connection.close();
+      } catch (err) {
+        console.error(err);
+      }
+    }
+  }
+};
+
+//ROUTES
+app.get("/", (req, res) => {});
+
+//EMPLEADO
 app.get("/empleados", (req, res) => {
   (async () => {
     let connection;
@@ -58,7 +83,159 @@ app.get("/empleados", (req, res) => {
   })();
 });
 
-app.get("/estados", (req, res) => {
+app.put("/empleados", (req, res) => {
+  console.log(req.body.CLAVE + "->PUT");
+});
+
+app.delete("/empleados", (req, res) => {
+  console.log(req.body.CLAVE + "->DELETE");
+
+  (async () => {
+    let connection;
+
+    try {
+      const connection = await oracledb.getConnection({
+        user: "userSK",
+        password: "PassUser",
+        connectString: "localhost/XEPDB1",
+      });
+
+      const sql = `DELETE FROM DIRECCION WHERE ID = :id`;
+
+      const binds = [
+        {
+          id: "DIR71",
+        },
+      ];
+
+      const options = { autoCommit: true };
+
+      const result = await connection.executeMany(sql, binds, options);
+
+      console.log(result);
+
+      return res.send(result);
+    } catch (error) {
+      console.log(error);
+      return error;
+    } finally {
+      if (connection) {
+        try {
+          await connection.close();
+        } catch (err) {
+          console.error(err);
+        }
+      }
+    }
+  })();
+});
+
+//DIRECCION
+app.delete("/direccion", (req, res) => {
+  console.log(req.body.ID + "->PUT");
+
+  (async () => {
+    let connection;
+
+    try {
+      const connection = await oracledb.getConnection({
+        user: "userSK",
+        password: "PassUser",
+        connectString: "localhost/XEPDB1",
+      });
+
+      const sql = `DELETE FROM DIRECCION WHERE ID = :id`;
+
+      const binds = [
+        {
+          id: req.body.ID,
+        },
+      ];
+
+      const options = { autoCommit: true };
+
+      const result = await connection.executeMany(sql, binds, options);
+
+      console.log(result);
+
+      return res.send(result);
+    } catch (error) {
+      console.log(error);
+      return error;
+    } finally {
+      if (connection) {
+        try {
+          await connection.close();
+        } catch (err) {
+          console.error(err);
+        }
+      }
+    }
+  })();
+});
+
+app.post("/direccion", (req, res) => {
+  console.log(req.body.ID + "->POST");
+  const DATA = req.body;
+
+  (async () => {
+    let connection;
+
+    try {
+      const connection = await oracledb.getConnection({
+        user: "userSK",
+        password: "PassUser",
+        connectString: "localhost/XEPDB1",
+      });
+
+      const sql = `INSERT INTO DIRECCION (ID, ESTADO_ID, ALCAL_MUN, CODIGO_POSTAL, CALLE, NUMERO_EXT, NUMERO_INT)
+         VALUES (:a, :b, :c, :d, :e, :f, :g)`;
+
+      const binds = [
+        {
+          // a: DATA.ID,
+          a: "DIR",
+          b: DATA.ESTADO_ID,
+          c: DATA.ALCAL_MUN,
+          d: DATA.CODIGO_POSTAL,
+          e: DATA.CALLE,
+          f: DATA.NUMERO_EXT,
+          g: DATA.NUMERO_INT,
+        },
+      ];
+
+      const options = {
+        autoCommit: true,
+        bindDefs: {
+          a: { type: oracledb.STRING, maxSize: 6 },
+          b: { type: oracledb.NUMBER },
+          c: { type: oracledb.STRING, maxSize: 30 },
+          d: { type: oracledb.NUMBER },
+          e: { type: oracledb.STRING, maxSize: 30 },
+          f: { type: oracledb.NUMBER },
+          g: { type: oracledb.NUMBER },
+        },
+      };
+
+      const result = await connection.executeMany(sql, binds, options);
+      console.log("No. Insert: " + result.rowsAffected);
+      return res.send("No. Insert: " + result.rowsAffected);
+    } catch (error) {
+      console.log(error);
+      return error;
+    } finally {
+      if (connection) {
+        try {
+          await connection.close();
+        } catch (err) {
+          console.error(err);
+        }
+      }
+    }
+  })();
+});
+
+app.get("/direccion", (req, res) => {
   (async () => {
     let connection;
 
@@ -70,9 +247,10 @@ app.get("/estados", (req, res) => {
       });
 
       const result = await connection.execute(
-        `SELECT ID, ESTADO FROM ESTADO`
+        `SELECT DIRECCION.ID, ESTADO AS ESTADO_ID, ALCAL_MUN, CODIGO_POSTAL, CALLE, NUMERO_EXT, NUMERO_INT 
+        FROM DIRECCION
+        JOIN ESTADO ON DIRECCION.ESTADO_ID = ESTADO.ID`
       );
-      // console.log(result);
       return res.send(result);
     } catch (error) {
       return error;
@@ -88,14 +266,8 @@ app.get("/estados", (req, res) => {
   })();
 });
 
-app.put("/empleados", (req, res) => {
-  console.log(req.body.CLAVE+"->PUT");
-  res.send("POST request to homepage");
-});
-
-app.delete("/empleados", (req, res) => {
-  console.log(req.body.CLAVE+"->DELETE");
-
+//ESTADO
+app.get("/estados", (req, res) => {
   (async () => {
     let connection;
 
@@ -106,13 +278,10 @@ app.delete("/empleados", (req, res) => {
         connectString: "localhost/XEPDB1",
       });
 
-      const result = await connection.execute(
-        `DELETE FROM EMPLEADO WHERE CLAVE = "${req.body.CLAVE}"`
-      );
-      console.log(result);
+      const result = await connection.execute(`SELECT ID, ESTADO FROM ESTADO`);
+      // console.log(result);
       return res.send(result);
     } catch (error) {
-      console.log(error);
       return error;
     } finally {
       if (connection) {
