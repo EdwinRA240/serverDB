@@ -278,7 +278,7 @@ app.put("/direccion", (req, res) => {
       };
 
       const result = await connection.executeMany(sql, binds, options);
-      console.log("No. Insert: " + result.rowsAffected);
+      console.log("No. Put: " + result.rowsAffected);
       return res.send(result);
     } catch (error) {
       console.log(error);
