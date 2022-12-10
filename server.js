@@ -219,7 +219,67 @@ app.post("/direccion", (req, res) => {
 
       const result = await connection.executeMany(sql, binds, options);
       console.log("No. Insert: " + result.rowsAffected);
-      return res.send("No. Insert: " + result.rowsAffected);
+      return res.send(result);
+    } catch (error) {
+      console.log(error);
+      return error;
+    } finally {
+      if (connection) {
+        try {
+          await connection.close();
+        } catch (err) {
+          console.error(err);
+        }
+      }
+    }
+  })();
+});
+
+app.put("/direccion", (req, res) => {
+  console.log(req.body.ID + "->PUT");
+  const DATA = req.body;
+
+  (async () => {
+    let connection;
+
+    try {
+      const connection = await oracledb.getConnection({
+        user: "userSK",
+        password: "PassUser",
+        connectString: "localhost/XEPDB1",
+      });
+
+      const sql = `UPDATE DIRECCION SET ESTADO_ID = :b , ALCAL_MUN = :c, CODIGO_POSTAL = :d, 
+                  CALLE = :e, NUMERO_EXT = :f, NUMERO_INT = :g WHERE ID = :a`;
+
+      const binds = [
+        {
+          a: DATA.ID,
+          b: DATA.ESTADO_ID,
+          c: DATA.ALCAL_MUN,
+          d: DATA.CODIGO_POSTAL,
+          e: DATA.CALLE,
+          f: DATA.NUMERO_EXT,
+          g: DATA.NUMERO_INT,
+        },
+      ];
+
+      const options = {
+        autoCommit: true,
+        bindDefs: {
+          a: { type: oracledb.STRING, maxSize: 6 },
+          b: { type: oracledb.NUMBER },
+          c: { type: oracledb.STRING, maxSize: 30 },
+          d: { type: oracledb.NUMBER },
+          e: { type: oracledb.STRING, maxSize: 30 },
+          f: { type: oracledb.NUMBER },
+          g: { type: oracledb.NUMBER },
+        },
+      };
+
+      const result = await connection.executeMany(sql, binds, options);
+      console.log("No. Insert: " + result.rowsAffected);
+      return res.send(result);
     } catch (error) {
       console.log(error);
       return error;
