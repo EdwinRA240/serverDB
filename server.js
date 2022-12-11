@@ -5,10 +5,10 @@ const oracledb = require("oracledb");
 oracledb.outFormat = oracledb.OUT_FORMAT_OBJECT;
 const PORT = 5000;
 
-//FIX UNDEFINED BODY
+////////FIX UNDEFINED BODY
 var bodyParser = require("body-parser");
 app.use(bodyParser.urlencoded({ extended: false }));
-// parse application/json
+/////////// parse application/json
 app.use(bodyParser.json());
 
 app.use(cors());
@@ -43,10 +43,10 @@ const execute = async (query) => {
   }
 };
 
-//ROUTES
+////////////////////////////////////////////////////////ROUTES
 app.get("/", (req, res) => {});
 
-//EMPLEADO
+////////////////////////////////////////////////////////EMPLEADO
 app.get("/empleados", (req, res) => {
   (async () => {
     let connection;
@@ -130,7 +130,68 @@ app.delete("/empleados", (req, res) => {
   })();
 });
 
-//DIRECCION
+app.post("/empleado", (req, res) => {
+  console.log(req.body.ID + "->POST");
+  const DATA = req.body;
+
+  (async () => {
+    let connection;
+
+    try {
+      const connection = await oracledb.getConnection({
+        user: "userSK",
+        password: "PassUser",
+        connectString: "localhost/XEPDB1",
+      });
+
+      const sql = `INSERT INTO DIRECCION (ID, ESTADO_ID, ALCAL_MUN, CODIGO_POSTAL, CALLE, NUMERO_EXT, NUMERO_INT)
+         VALUES (:a, :b, :c, :d, :e, :f, :g)`;
+
+      const binds = [
+        {
+          // a: DATA.ID,
+          a: "DIR",
+          b: DATA.ESTADO_ID,
+          c: DATA.ALCAL_MUN,
+          d: DATA.CODIGO_POSTAL,
+          e: DATA.CALLE,
+          f: DATA.NUMERO_EXT,
+          g: DATA.NUMERO_INT,
+        },
+      ];
+
+      const options = {
+        autoCommit: true,
+        bindDefs: {
+          a: { type: oracledb.STRING, maxSize: 6 },
+          b: { type: oracledb.NUMBER },
+          c: { type: oracledb.STRING, maxSize: 30 },
+          d: { type: oracledb.NUMBER },
+          e: { type: oracledb.STRING, maxSize: 30 },
+          f: { type: oracledb.NUMBER },
+          g: { type: oracledb.NUMBER },
+        },
+      };
+
+      const result = await connection.executeMany(sql, binds, options);
+      console.log("No. Insert: " + result.rowsAffected);
+      return res.send(result);
+    } catch (error) {
+      console.log(error);
+      return error;
+    } finally {
+      if (connection) {
+        try {
+          await connection.close();
+        } catch (err) {
+          console.error(err);
+        }
+      }
+    }
+  })();
+});
+
+///////////////////////////////////////////////////////////////DIRECCION
 app.delete("/direccion", (req, res) => {
   console.log(req.body.ID + "->PUT");
 
@@ -342,6 +403,177 @@ app.get("/estados", (req, res) => {
       // console.log(result);
       return res.send(result);
     } catch (error) {
+      return error;
+    } finally {
+      if (connection) {
+        try {
+          await connection.close();
+        } catch (err) {
+          console.error(err);
+        }
+      }
+    }
+  })();
+});
+
+//////////////////////////////////////////MODELOS
+
+app.get("/modelos", (req, res) => {
+  (async () => {
+    let connection;
+
+    try {
+      const connection = await oracledb.getConnection({
+        user: "userSK",
+        password: "PassUser",
+        connectString: "localhost/XEPDB1",
+      });
+
+      const result = await connection.execute(`SELECT ID, MODELO FROM MODELO`);
+      // console.log(result);
+      return res.send(result);
+    } catch (error) {
+      return error;
+    } finally {
+      if (connection) {
+        try {
+          await connection.close();
+        } catch (err) {
+          console.error(err);
+        }
+      }
+    }
+  })();
+});
+
+app.post("/modelo", (req, res) => {
+  console.log(req.body.ID + "->POST");
+  // const DATA = req.body;
+
+  (async () => {
+    let connection;
+
+    try {
+      const connection = await oracledb.getConnection({
+        user: "userSK",
+        password: "PassUser",
+        connectString: "localhost/XEPDB1",
+      });
+
+      const sql = `INSERT INTO MODELO VALUES(:a, :b)`;
+
+      const binds = [
+        {
+          a: req.body.ID,
+          b: req.body.MODELO,
+        },
+      ];
+
+      const options = {
+        autoCommit: true,
+        bindDefs: {
+          a: { type: oracledb.NUMBER },
+          b: { type: oracledb.STRING, maxSize: 30 },
+        },
+      };
+
+      const result = await connection.executeMany(sql, binds, options);
+      console.log("No. Insert: " + result.rowsAffected);
+      return res.send(result);
+    } catch (error) {
+      console.log(error);
+      return error;
+    } finally {
+      if (connection) {
+        try {
+          await connection.close();
+        } catch (err) {
+          console.error(err);
+        }
+      }
+    }
+  })();
+});
+
+app.delete("/modelo", (req, res) => {
+  console.log(req.body.ID + "->PUT");
+
+  (async () => {
+    let connection;
+
+    try {
+      const connection = await oracledb.getConnection({
+        user: "userSK",
+        password: "PassUser",
+        connectString: "localhost/XEPDB1",
+      });
+
+      const sql = `DELETE FROM MODELO WHERE ID = :id`;
+
+      const binds = [
+        {
+          id: req.body.ID,
+        },
+      ];
+
+      const options = { autoCommit: true };
+
+      const result = await connection.executeMany(sql, binds, options);
+
+      console.log(result);
+
+      return res.send(result);
+    } catch (error) {
+      console.log(error);
+      return error;
+    } finally {
+      if (connection) {
+        try {
+          await connection.close();
+        } catch (err) {
+          console.error(err);
+        }
+      }
+    }
+  })();
+});
+
+app.put("/modelo", (req, res) => {
+  console.log(req.body.ID + "->POST");
+  // const DATA = req.body;
+
+  (async () => {
+    let connection;
+
+    try {
+      const connection = await oracledb.getConnection({
+        user: "userSK",
+        password: "PassUser",
+        connectString: "localhost/XEPDB1",
+      });
+
+      const sql = `UPDATE MODELO SET MODELO = :b WHERE ID = :a`;
+
+      const binds = [
+        {
+          a: req.body.ID,
+          b: req.body.MODELO,
+        },
+      ];
+
+      const options = {
+        autoCommit: true,
+        bindDefs: {
+          a: { type: oracledb.NUMBER },
+          b: { type: oracledb.STRING, maxSize: 30 },
+        },
+      };
+
+      const result = await connection.executeMany(sql, binds, options);
+      console.log("No. Put: " + result.rowsAffected);
+      return res.send(result);
+    } catch (error) {
+      console.log(error);
       return error;
     } finally {
       if (connection) {
