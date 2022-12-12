@@ -1117,9 +1117,9 @@ app.put("/Descuento", (req, res) => {
   })();
 });
 
-//////////////////////////////////////////Cliente
+//////////////////////////////////////////Sucursal
 
-app.get("/Cliente", (req, res) => {
+app.get("/Sucursal", (req, res) => {
   (async () => {
     let connection;
 
@@ -1131,8 +1131,8 @@ app.get("/Cliente", (req, res) => {
       });
 
       const result =
-        await connection.execute(`SELECT CLAVE, NOMBRE, APELLIDO_PAT, APELLIDO_MAT, CORREO, CODIGO_POSTAL
-      FROM CLIENTE JOIN DIRECCION ON DIRECCION_ID = ID`);
+        await connection.execute(`SELECT CLAVE, NOMBRE, PAGINA_WEB, LADA, NUMERO_TEL, EXTENSION, CODIGO_POSTAL 
+        FROM SUCURSAL JOIN DIRECCION ON DIRECCION_ID = ID`);
       return res.send(result);
     } catch (error) {
       return error;
@@ -1148,9 +1148,8 @@ app.get("/Cliente", (req, res) => {
   })();
 });
 
-app.post("/Cliente", (req, res) => {
+app.post("/Sucursal", (req, res) => {
   console.log(req.body.CLAVE + "->POST");
-  // const DATA = req.body;
 
   (async () => {
     let connection;
@@ -1162,16 +1161,17 @@ app.post("/Cliente", (req, res) => {
         connectString: "localhost/XEPDB1",
       });
 
-      const sql = `INSERT INTO CLIENTE VALUES (:a, :b, :C, :d, :e, :f)`;
+      const sql = `INSERT INTO SUCURSAL VALUES (:a, :b, :C, :d, :e, :f, :g)`;
 
       const binds = [
         {
-          a: "CL",
+          a: "SCR",
           b: req.body.NOMBRE,
-          c: req.body.APELLIDO_PAT,
-          d: req.body.APELLIDO_MAT,
-          e: req.body.CORREO,
-          f: req.body.ID_DIR,
+          c: req.body.PAGINA_WEB,
+          d: req.body.LADA,
+          e: req.body.NUMERO_TEL,
+          f: req.body.EXTENSION,
+          g: req.body.ID_DIR,
         },
       ];
 
@@ -1179,11 +1179,12 @@ app.post("/Cliente", (req, res) => {
         autoCommit: true,
         bindDefs: {
           a: { type: oracledb.STRING, maxSize: 5 },
-          b: { type: oracledb.STRING, maxSize: 15 },
-          c: { type: oracledb.STRING, maxSize: 15 },
-          d: { type: oracledb.STRING, maxSize: 15 },
-          e: { type: oracledb.STRING, maxSize: 30 },
-          f: { type: oracledb.STRING, maxSize: 6 },
+          b: { type: oracledb.STRING, maxSize: 30 },
+          c: { type: oracledb.STRING, maxSize: 20 },
+          d: { type: oracledb.NUMBER },
+          e: { type: oracledb.NUMBER },
+          f: { type: oracledb.NUMBER },
+          g: { type: oracledb.STRING, maxSize: 6 },
         },
       };
 
@@ -1205,7 +1206,7 @@ app.post("/Cliente", (req, res) => {
   })();
 });
 
-app.delete("/Cliente", (req, res) => {
+app.delete("/Sucursal", (req, res) => {
   console.log(req.body.ID + "->PUT");
 
   (async () => {
@@ -1218,7 +1219,7 @@ app.delete("/Cliente", (req, res) => {
         connectString: "localhost/XEPDB1",
       });
 
-      const sql = `DELETE FROM Cliente WHERE CLAVE = :a`;
+      const sql = `DELETE FROM SUCURSAL WHERE CLAVE = :a`;
 
       const binds = [
         {
@@ -1248,59 +1249,63 @@ app.delete("/Cliente", (req, res) => {
   })();
 });
 
-app.put("/Cliente", (req, res) => {
+app.put("/Sucursal", (req, res) => {
   console.log(req.body.CLAVE + "->POST");
 
-  (async () => {
-    let connection;
+  if (req.body.CLAVE.length > 0 && req.body.ID_DIR.length > 0) {
+    (async () => {
+      let connection;
 
-    try {
-      const connection = await oracledb.getConnection({
-        user: "userSK",
-        password: "PassUser",
-        connectString: "localhost/XEPDB1",
-      });
+      try {
+        const connection = await oracledb.getConnection({
+          user: "userSK",
+          password: "PassUser",
+          connectString: "localhost/XEPDB1",
+        });
 
-      const sql = `UPDATE Cliente SET NOMBRE = :b, APELLIDO_PAT = :c, APELLIDO_MAT = :d, CORREO = :e, 
-      DIRECCION_ID = :f WHERE CLAVE = :a`;
+        const sql = `UPDATE SUCURSAL SET NOMBRE = :b, PAGINA_WEB = :c, LADA = :d, NUMERO_TEL = :e, 
+        EXTENSION = :f, DIRECCION_ID = :g WHERE CLAVE = :a`;
 
-      const binds = [
-        {
-          a: req.body.CLAVE,
-          b: req.body.NOMBRE,
-          c: req.body.APELLIDO_PAT,
-          d: req.body.APELLIDO_MAT,
-          e: req.body.CORREO,
-          f: req.body.ID_DIR,
-        },
-      ];
+        const binds = [
+          {
+            a: req.body.CLAVE,
+            b: req.body.NOMBRE,
+            c: req.body.PAGINA_WEB,
+            d: req.body.LADA,
+            e: req.body.NUMERO_TEL,
+            f: req.body.EXTENSION,
+            g: req.body.ID_DIR,
+          },
+        ];
 
-      const options = {
-        autoCommit: true,
-        bindDefs: {
-          a: { type: oracledb.STRING, maxSize: 5 },
-          b: { type: oracledb.STRING, maxSize: 15 },
-          c: { type: oracledb.STRING, maxSize: 15 },
-          d: { type: oracledb.STRING, maxSize: 15 },
-          e: { type: oracledb.STRING, maxSize: 30 },
-          f: { type: oracledb.STRING, maxSize: 6 },
-        },
-      };
+        const options = {
+          autoCommit: true,
+          bindDefs: {
+            a: { type: oracledb.STRING, maxSize: 5 },
+            b: { type: oracledb.STRING, maxSize: 30 },
+            c: { type: oracledb.STRING, maxSize: 20 },
+            d: { type: oracledb.NUMBER },
+            e: { type: oracledb.NUMBER },
+            f: { type: oracledb.NUMBER },
+            g: { type: oracledb.STRING, maxSize: 6 },
+          },
+        };
 
-      const result = await connection.executeMany(sql, binds, options);
-      console.log("No. Put: " + result.rowsAffected);
-      return res.send(result);
-    } catch (error) {
-      console.log(error);
-      return error;
-    } finally {
-      if (connection) {
-        try {
-          await connection.close();
-        } catch (err) {
-          console.error(err);
+        const result = await connection.executeMany(sql, binds, options);
+        console.log("No. Put: " + result.rowsAffected);
+        return res.send(result);
+      } catch (error) {
+        console.log(error);
+        return error;
+      } finally {
+        if (connection) {
+          try {
+            await connection.close();
+          } catch (err) {
+            console.error(err);
+          }
         }
       }
-    }
-  })();
+    })();
+  }
 });
