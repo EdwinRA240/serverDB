@@ -59,8 +59,8 @@ app.get("/empleados", (req, res) => {
       });
 
       const result = await connection.execute(
-        `SELECT EMPLEADO.CLAVE, EMPLEADO.NOMBRE, APELLIDO_PAT, APELLIDO_MAT, CORREO, CARGO, SUCURSAL.NOMBRE AS NOMBRE_S, ESTADO.ESTADO
-        FROM EMPLEADO
+        `SELECT EMPLEADO.CLAVE, EMPLEADO.NOMBRE, APELLIDO_PAT, APELLIDO_MAT, CORREO, CARGO, SUCURSAL.NOMBRE AS NOMBRE_S, 
+        ESTADO.ESTADO FROM EMPLEADO
         JOIN CARGO_EPL ON EMPLEADO.CARGO_EPL_ID = CARGO_EPL.ID
         JOIN SUCURSAL ON EMPLEADO.SUCURSAL_CLAVE = SUCURSAL.CLAVE
         JOIN DIRECCION ON EMPLEADO.DIRECCION_ID = DIRECCION.ID
@@ -192,9 +192,7 @@ app.post("/empleado", (req, res) => {
 });
 
 ///////////////////////////////////////////////////////////////DIRECCION
-app.delete("/direccion", (req, res) => {
-  console.log(req.body.ID + "->PUT");
-
+app.get("/direccion", (req, res) => {
   (async () => {
     let connection;
 
@@ -205,23 +203,13 @@ app.delete("/direccion", (req, res) => {
         connectString: "localhost/XEPDB1",
       });
 
-      const sql = `DELETE FROM DIRECCION WHERE ID = :id`;
-
-      const binds = [
-        {
-          id: req.body.ID,
-        },
-      ];
-
-      const options = { autoCommit: true };
-
-      const result = await connection.executeMany(sql, binds, options);
-
-      console.log(result);
-
+      const result = await connection.execute(
+        `SELECT DIRECCION.ID, ESTADO AS ESTADO_ID, ALCAL_MUN, CODIGO_POSTAL, CALLE, NUMERO_EXT, NUMERO_INT 
+        FROM DIRECCION
+        JOIN ESTADO ON DIRECCION.ESTADO_ID = ESTADO.ID`
+      );
       return res.send(result);
     } catch (error) {
-      console.log(error);
       return error;
     } finally {
       if (connection) {
@@ -296,6 +284,49 @@ app.post("/direccion", (req, res) => {
   })();
 });
 
+app.delete("/direccion", (req, res) => {
+  console.log(req.body.ID + "->PUT");
+
+  (async () => {
+    let connection;
+
+    try {
+      const connection = await oracledb.getConnection({
+        user: "userSK",
+        password: "PassUser",
+        connectString: "localhost/XEPDB1",
+      });
+
+      const sql = `DELETE FROM DIRECCION WHERE ID = :id`;
+
+      const binds = [
+        {
+          id: req.body.ID,
+        },
+      ];
+
+      const options = { autoCommit: true };
+
+      const result = await connection.executeMany(sql, binds, options);
+
+      console.log(result);
+
+      return res.send(result);
+    } catch (error) {
+      console.log(error);
+      return error;
+    } finally {
+      if (connection) {
+        try {
+          await connection.close();
+        } catch (err) {
+          console.error(err);
+        }
+      }
+    }
+  })();
+});
+
 app.put("/direccion", (req, res) => {
   console.log(req.body.ID + "->PUT");
   const DATA = req.body;
@@ -343,37 +374,6 @@ app.put("/direccion", (req, res) => {
       return res.send(result);
     } catch (error) {
       console.log(error);
-      return error;
-    } finally {
-      if (connection) {
-        try {
-          await connection.close();
-        } catch (err) {
-          console.error(err);
-        }
-      }
-    }
-  })();
-});
-
-app.get("/direccion", (req, res) => {
-  (async () => {
-    let connection;
-
-    try {
-      const connection = await oracledb.getConnection({
-        user: "userSK",
-        password: "PassUser",
-        connectString: "localhost/XEPDB1",
-      });
-
-      const result = await connection.execute(
-        `SELECT DIRECCION.ID, ESTADO AS ESTADO_ID, ALCAL_MUN, CODIGO_POSTAL, CALLE, NUMERO_EXT, NUMERO_INT 
-        FROM DIRECCION
-        JOIN ESTADO ON DIRECCION.ESTADO_ID = ESTADO.ID`
-      );
-      return res.send(result);
-    } catch (error) {
       return error;
     } finally {
       if (connection) {
@@ -737,6 +737,194 @@ app.put("/Marca", (req, res) => {
         bindDefs: {
           a: { type: oracledb.NUMBER },
           b: { type: oracledb.STRING, maxSize: 30 },
+        },
+      };
+
+      const result = await connection.executeMany(sql, binds, options);
+      console.log("No. Put: " + result.rowsAffected);
+      return res.send(result);
+    } catch (error) {
+      console.log(error);
+      return error;
+    } finally {
+      if (connection) {
+        try {
+          await connection.close();
+        } catch (err) {
+          console.error(err);
+        }
+      }
+    }
+  })();
+});
+
+//////////////////////////////////////////Cliente
+
+app.get("/Cliente", (req, res) => {
+  (async () => {
+    let connection;
+
+    try {
+      const connection = await oracledb.getConnection({
+        user: "userSK",
+        password: "PassUser",
+        connectString: "localhost/XEPDB1",
+      });
+
+      const result =
+        await connection.execute(`SELECT CLAVE, NOMBRE, APELLIDO_PAT, APELLIDO_MAT, CORREO, CODIGO_POSTAL
+      FROM CLIENTE JOIN DIRECCION ON DIRECCION_ID = ID`);
+      return res.send(result);
+    } catch (error) {
+      return error;
+    } finally {
+      if (connection) {
+        try {
+          await connection.close();
+        } catch (err) {
+          console.error(err);
+        }
+      }
+    }
+  })();
+});
+
+app.post("/Cliente", (req, res) => {
+  console.log(req.body.CLAVE + "->POST");
+  // const DATA = req.body;
+
+  (async () => {
+    let connection;
+
+    try {
+      const connection = await oracledb.getConnection({
+        user: "userSK",
+        password: "PassUser",
+        connectString: "localhost/XEPDB1",
+      });
+
+      const sql = `INSERT INTO CLIENTE VALUES (:a, :b, :C, :d, :e, :f)`;
+
+      const binds = [
+        {
+          a: "CL",
+          b: req.body.NOMBRE,
+          c: req.body.APELLIDO_PAT,
+          d: req.body.APELLIDO_MAT,
+          e: req.body.CORREO,
+          f: req.body.ID_DIR,
+        },
+      ];
+
+      const options = {
+        autoCommit: true,
+        bindDefs: {
+          a: { type: oracledb.STRING, maxSize: 5 },
+          b: { type: oracledb.STRING, maxSize: 15 },
+          c: { type: oracledb.STRING, maxSize: 15 },
+          d: { type: oracledb.STRING, maxSize: 15 },
+          e: { type: oracledb.STRING, maxSize: 30 },
+          f: { type: oracledb.STRING, maxSize: 6 },
+        },
+      };
+
+      const result = await connection.executeMany(sql, binds, options);
+      console.log("No. Insert: " + result.rowsAffected);
+      return res.send(result);
+    } catch (error) {
+      console.log(error);
+      return error;
+    } finally {
+      if (connection) {
+        try {
+          await connection.close();
+        } catch (err) {
+          console.error(err);
+        }
+      }
+    }
+  })();
+});
+
+app.delete("/Cliente", (req, res) => {
+  console.log(req.body.ID + "->PUT");
+
+  (async () => {
+    let connection;
+
+    try {
+      const connection = await oracledb.getConnection({
+        user: "userSK",
+        password: "PassUser",
+        connectString: "localhost/XEPDB1",
+      });
+
+      const sql = `DELETE FROM Cliente WHERE CLAVE = :a`;
+
+      const binds = [
+        {
+          a: req.body.CLAVE,
+        },
+      ];
+
+      const options = { autoCommit: true };
+
+      const result = await connection.executeMany(sql, binds, options);
+
+      console.log(result);
+
+      return res.send(result);
+    } catch (error) {
+      console.log(error);
+      return error;
+    } finally {
+      if (connection) {
+        try {
+          await connection.close();
+        } catch (err) {
+          console.error(err);
+        }
+      }
+    }
+  })();
+});
+
+app.put("/Cliente", (req, res) => {
+  console.log(req.body.CLAVE + "->POST");
+
+  (async () => {
+    let connection;
+
+    try {
+      const connection = await oracledb.getConnection({
+        user: "userSK",
+        password: "PassUser",
+        connectString: "localhost/XEPDB1",
+      });
+
+      const sql = `UPDATE Cliente SET NOMBRE = :b, APELLIDO_PAT = :c, APELLIDO_MAT = :d, CORREO = :e, 
+      DIRECCION_ID = :f WHERE CLAVE = :a`;
+
+      const binds = [
+        {
+          a: req.body.CLAVE,
+          b: req.body.NOMBRE,
+          c: req.body.APELLIDO_PAT,
+          d: req.body.APELLIDO_MAT,
+          e: req.body.CORREO,
+          f: req.body.ID_DIR,
+        },
+      ];
+
+      const options = {
+        autoCommit: true,
+        bindDefs: {
+          a: { type: oracledb.STRING, maxSize: 5 },
+          b: { type: oracledb.STRING, maxSize: 15 },
+          c: { type: oracledb.STRING, maxSize: 15 },
+          d: { type: oracledb.STRING, maxSize: 15 },
+          e: { type: oracledb.STRING, maxSize: 30 },
+          f: { type: oracledb.STRING, maxSize: 6 },
         },
       };
 
