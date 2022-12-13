@@ -47,7 +47,7 @@ const execute = async (query) => {
 app.get("/", (req, res) => {});
 
 ////////////////////////////////////////////////////////EMPLEADO
-app.get("/empleados", (req, res) => {
+app.get("/Empleado", (req, res) => {
   (async () => {
     let connection;
 
@@ -59,15 +59,13 @@ app.get("/empleados", (req, res) => {
       });
 
       const result = await connection.execute(
-        `SELECT EMPLEADO.CLAVE, EMPLEADO.NOMBRE, APELLIDO_PAT, APELLIDO_MAT, CORREO, CARGO, SUCURSAL.NOMBRE AS NOMBRE_S, 
-        ESTADO.ESTADO FROM EMPLEADO
+        `SELECT EMPLEADO.CLAVE AS CLAVE, EMPLEADO.NOMBRE, APELLIDO_PAT, APELLIDO_MAT, CORREO, CARGO, SUCURSAL.NOMBRE AS NOMBRE_S, 
+        CODIGO_POSTAL FROM EMPLEADO
         JOIN CARGO_EPL ON EMPLEADO.CARGO_EPL_ID = CARGO_EPL.ID
         JOIN SUCURSAL ON EMPLEADO.SUCURSAL_CLAVE = SUCURSAL.CLAVE
         JOIN DIRECCION ON EMPLEADO.DIRECCION_ID = DIRECCION.ID
-        JOIN ESTADO ON DIRECCION.ESTADO_ID = ESTADO.ID
         ORDER BY EMPLEADO.NOMBRE`
       );
-      // console.log(result);
       return res.send(result);
     } catch (error) {
       return error;
@@ -83,12 +81,9 @@ app.get("/empleados", (req, res) => {
   })();
 });
 
-app.put("/empleados", (req, res) => {
-  console.log(req.body.CLAVE + "->PUT");
-});
-
-app.delete("/empleados", (req, res) => {
-  console.log(req.body.CLAVE + "->DELETE");
+app.post("/Empleado", (req, res) => {
+  console.log(req.body.CLAVE + "->POST");
+  const DATA = req.body;
 
   (async () => {
     let connection;
@@ -100,11 +95,73 @@ app.delete("/empleados", (req, res) => {
         connectString: "localhost/XEPDB1",
       });
 
-      const sql = `DELETE FROM DIRECCION WHERE ID = :id`;
+      const sql = `INSERT INTO EMPLEADO (CLAVE, NOMBRE, APELLIDO_PAT, APELLIDO_MAT, 
+        CORREO, CARGO_EPL_ID, SUCURSAL_CLAVE, DIRECCION_ID)
+        VALUES (:a, :b, :c, :d, :e, :f, :g, :h)`;
 
       const binds = [
         {
-          id: "DIR71",
+          a: DATA.CLAVE,
+          b: DATA.NOMBRE,
+          c: DATA.APELLIDO_PAT,
+          d: DATA.APELLIDO_MAT,
+          e: DATA.CORREO,
+          f: DATA.CARGO_EPL,
+          g: DATA.SUCURSAL_CLAVE,
+          h: DATA.DIRECION_ID,
+        },
+      ];
+
+      const options = {
+        autoCommit: true,
+        bindDefs: {
+          a: { type: oracledb.STRING, maxSize: 6 },
+          b: { type: oracledb.STRING, maxSize: 15 },
+          c: { type: oracledb.STRING, maxSize: 15 },
+          d: { type: oracledb.STRING, maxSize: 15 },
+          e: { type: oracledb.STRING, maxSize: 30 },
+          f: { type: oracledb.NUMBER },
+          g: { type: oracledb.STRING, maxSize: 5 },
+          h: { type: oracledb.STRING, maxSize: 6 },
+        },
+      };
+
+      const result = await connection.executeMany(sql, binds, options);
+      console.log("No. Insert: " + result.rowsAffected);
+      return res.send(result);
+    } catch (error) {
+      console.log(error);
+      return error;
+    } finally {
+      if (connection) {
+        try {
+          await connection.close();
+        } catch (err) {
+          console.error(err);
+        }
+      }
+    }
+  })();
+});
+
+app.delete("/Empleado", (req, res) => {
+  console.log(req.body.CLAVE + "->PUT");
+
+  (async () => {
+    let connection;
+
+    try {
+      const connection = await oracledb.getConnection({
+        user: "userSK",
+        password: "PassUser",
+        connectString: "localhost/XEPDB1",
+      });
+
+      const sql = `DELETE FROM EMPLEADO WHERE CLAVE = :a`;
+
+      const binds = [
+        {
+          a: req.body.CLAVE,
         },
       ];
 
@@ -130,8 +187,8 @@ app.delete("/empleados", (req, res) => {
   })();
 });
 
-app.post("/empleado", (req, res) => {
-  console.log(req.body.ID + "->POST");
+app.put("/Empleado", (req, res) => {
+  console.log(req.body.CLAVE + "->PUT");
   const DATA = req.body;
 
   (async () => {
@@ -144,19 +201,19 @@ app.post("/empleado", (req, res) => {
         connectString: "localhost/XEPDB1",
       });
 
-      const sql = `INSERT INTO DIRECCION (ID, ESTADO_ID, ALCAL_MUN, CODIGO_POSTAL, CALLE, NUMERO_EXT, NUMERO_INT)
-         VALUES (:a, :b, :c, :d, :e, :f, :g)`;
+      const sql = `UPDATE EMPLEADO SET NOMBRE = :b, APELLIDO_PAT = :c, APELLIDO_MAT = :d, 
+                    CORREO = :e, CARGO_EPL_ID = :f, SUCURSAL_CLAVE = :g, DIRECCION_ID = :h WHERE CLAVE = :a`
 
       const binds = [
         {
-          // a: DATA.ID,
-          a: "DIR",
-          b: DATA.ESTADO_ID,
-          c: DATA.ALCAL_MUN,
-          d: DATA.CODIGO_POSTAL,
-          e: DATA.CALLE,
-          f: DATA.NUMERO_EXT,
-          g: DATA.NUMERO_INT,
+          a: DATA.CLAVE,
+          b: DATA.NOMBRE,
+          c: DATA.APELLIDO_PAT,
+          d: DATA.APELLIDO_MAT,
+          e: DATA.CORREO,
+          f: DATA.CARGO_EPL,
+          g: DATA.SUCURSAL_CLAVE,
+          h: DATA.DIRECION_ID,
         },
       ];
 
@@ -164,17 +221,18 @@ app.post("/empleado", (req, res) => {
         autoCommit: true,
         bindDefs: {
           a: { type: oracledb.STRING, maxSize: 6 },
-          b: { type: oracledb.NUMBER },
-          c: { type: oracledb.STRING, maxSize: 30 },
-          d: { type: oracledb.NUMBER },
+          b: { type: oracledb.STRING, maxSize: 15 },
+          c: { type: oracledb.STRING, maxSize: 15 },
+          d: { type: oracledb.STRING, maxSize: 15 },
           e: { type: oracledb.STRING, maxSize: 30 },
           f: { type: oracledb.NUMBER },
-          g: { type: oracledb.NUMBER },
+          g: { type: oracledb.STRING, maxSize: 5 },
+          h: { type: oracledb.STRING, maxSize: 6 },
         },
       };
 
       const result = await connection.executeMany(sql, binds, options);
-      console.log("No. Insert: " + result.rowsAffected);
+      console.log("No. Put: " + result.rowsAffected);
       return res.send(result);
     } catch (error) {
       console.log(error);
