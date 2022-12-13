@@ -1477,3 +1477,171 @@ app.put("/CargoEpl", (req, res) => {
     }
   })();
 });
+
+//////////////////////////////////////////Proposito
+
+app.get("/Proposito", (req, res) => {
+  (async () => {
+    let connection;
+
+    try {
+      const connection = await oracledb.getConnection({
+        user: "userSK",
+        password: "PassUser",
+        connectString: "localhost/XEPDB1",
+      });
+
+      const result = await connection.execute(`SELECT ID, PROPOSITO FROM PROPOSITO`);
+      return res.send(result);
+    } catch (error) {
+      return error;
+    } finally {
+      if (connection) {
+        try {
+          await connection.close();
+        } catch (err) {
+          console.error(err);
+        }
+      }
+    }
+  })();
+});
+
+app.post("/Proposito", (req, res) => {
+  console.log(req.body.ID + "->POST");
+
+  (async () => {
+    let connection;
+
+    try {
+      const connection = await oracledb.getConnection({
+        user: "userSK",
+        password: "PassUser",
+        connectString: "localhost/XEPDB1",
+      });
+
+      const sql = `INSERT INTO PROPOSITO VALUES(:a, :b)`;
+
+      const binds = [
+        {
+          a: req.body.ID,
+          b: req.body.PROPOSITO,
+        },
+      ];
+
+      const options = {
+        autoCommit: true,
+        bindDefs: {
+          a: { type: oracledb.NUMBER },
+          b: { type: oracledb.STRING, maxSize: 15 },
+        },
+      };
+
+      const result = await connection.executeMany(sql, binds, options);
+      console.log("No. Insert: " + result.rowsAffected);
+      return res.send(result);
+    } catch (error) {
+      console.log(error);
+      return error;
+    } finally {
+      if (connection) {
+        try {
+          await connection.close();
+        } catch (err) {
+          console.error(err);
+        }
+      }
+    }
+  })();
+});
+
+app.delete("/Proposito", (req, res) => {
+  console.log(req.body.ID + "->DELETE");
+
+  (async () => {
+    let connection;
+
+    try {
+      const connection = await oracledb.getConnection({
+        user: "userSK",
+        password: "PassUser",
+        connectString: "localhost/XEPDB1",
+      });
+
+      const sql = `DELETE FROM PROPOSITO WHERE ID = :id`;
+
+      const binds = [
+        {
+          id: req.body.ID,
+        },
+      ];
+
+      const options = { autoCommit: true };
+
+      const result = await connection.executeMany(sql, binds, options);
+
+      console.log(result);
+
+      return res.send(result);
+    } catch (error) {
+      console.log(error);
+      return error;
+    } finally {
+      if (connection) {
+        try {
+          await connection.close();
+        } catch (err) {
+          console.error(err);
+        }
+      }
+    }
+  })();
+});
+
+app.put("/Proposito", (req, res) => {
+  console.log(req.body.ID + "->PUT");
+
+  (async () => {
+    let connection;
+
+    try {
+      const connection = await oracledb.getConnection({
+        user: "userSK",
+        password: "PassUser",
+        connectString: "localhost/XEPDB1",
+      });
+
+      const sql = `UPDATE PROPOSITO SET PROPOSITO = :b WHERE ID = :a`;
+
+      const binds = [
+        {
+          a: req.body.ID,
+          b: req.body.PROPOSITO,
+        },
+      ];
+
+      const options = {
+        autoCommit: true,
+        bindDefs: {
+          a: { type: oracledb.NUMBER },
+          b: { type: oracledb.STRING, maxSize: 15 },
+        },
+      };
+
+      const result = await connection.executeMany(sql, binds, options);
+      console.log("No. Put: " + result.rowsAffected);
+      return res.send(result);
+    } catch (error) {
+      console.log(error);
+      return error;
+    } finally {
+      if (connection) {
+        try {
+          await connection.close();
+        } catch (err) {
+          console.error(err);
+        }
+      }
+    }
+  })();
+});
