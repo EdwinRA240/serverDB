@@ -1645,3 +1645,171 @@ app.put("/Proposito", (req, res) => {
     }
   })();
 });
+
+//////////////////////////////////////////TALLA
+
+app.get("/Talla", (req, res) => {
+  (async () => {
+    let connection;
+
+    try {
+      const connection = await oracledb.getConnection({
+        user: "userSK",
+        password: "PassUser",
+        connectString: "localhost/XEPDB1",
+      });
+
+      const result = await connection.execute(`SELECT ID, TALLA FROM TALLA`);
+      return res.send(result);
+    } catch (error) {
+      return error;
+    } finally {
+      if (connection) {
+        try {
+          await connection.close();
+        } catch (err) {
+          console.error(err);
+        }
+      }
+    }
+  })();
+});
+
+app.post("/Talla", (req, res) => {
+  console.log(req.body.ID + "->POST");
+
+  (async () => {
+    let connection;
+
+    try {
+      const connection = await oracledb.getConnection({
+        user: "userSK",
+        password: "PassUser",
+        connectString: "localhost/XEPDB1",
+      });
+
+      const sql = `INSERT INTO TALLA VALUES(:a, :b)`;
+
+      const binds = [
+        {
+          a: req.body.ID,
+          b: req.body.TALLA,
+        },
+      ];
+
+      const options = {
+        autoCommit: true,
+        bindDefs: {
+          a: { type: oracledb.NUMBER },
+          b: { type: oracledb.STRING, maxSize: 7 },
+        },
+      };
+
+      const result = await connection.executeMany(sql, binds, options);
+      console.log("No. Insert: " + result.rowsAffected);
+      return res.send(result);
+    } catch (error) {
+      console.log(error);
+      return error;
+    } finally {
+      if (connection) {
+        try {
+          await connection.close();
+        } catch (err) {
+          console.error(err);
+        }
+      }
+    }
+  })();
+});
+
+app.delete("/Talla", (req, res) => {
+  console.log(req.body.ID + "->DELETE");
+
+  (async () => {
+    let connection;
+
+    try {
+      const connection = await oracledb.getConnection({
+        user: "userSK",
+        password: "PassUser",
+        connectString: "localhost/XEPDB1",
+      });
+
+      const sql = `DELETE FROM TALLA WHERE ID = :id`;
+
+      const binds = [
+        {
+          id: req.body.ID,
+        },
+      ];
+
+      const options = { autoCommit: true };
+
+      const result = await connection.executeMany(sql, binds, options);
+
+      console.log(result);
+
+      return res.send(result);
+    } catch (error) {
+      console.log(error);
+      return error;
+    } finally {
+      if (connection) {
+        try {
+          await connection.close();
+        } catch (err) {
+          console.error(err);
+        }
+      }
+    }
+  })();
+});
+
+app.put("/Talla", (req, res) => {
+  console.log(req.body.ID + "->PUT");
+
+  (async () => {
+    let connection;
+
+    try {
+      const connection = await oracledb.getConnection({
+        user: "userSK",
+        password: "PassUser",
+        connectString: "localhost/XEPDB1",
+      });
+
+      const sql = `UPDATE TALLA SET TALLA = :b WHERE ID = :a`;
+
+      const binds = [
+        {
+          a: req.body.ID,
+          b: req.body.TALLA,
+        },
+      ];
+
+      const options = {
+        autoCommit: true,
+        bindDefs: {
+          a: { type: oracledb.NUMBER },
+          b: { type: oracledb.STRING, maxSize: 7 },
+        },
+      };
+
+      const result = await connection.executeMany(sql, binds, options);
+      console.log("No. Put: " + result.rowsAffected);
+      return res.send(result);
+    } catch (error) {
+      console.log(error);
+      return error;
+    } finally {
+      if (connection) {
+        try {
+          await connection.close();
+        } catch (err) {
+          console.error(err);
+        }
+      }
+    }
+  })();
+});
